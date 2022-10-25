@@ -15,14 +15,11 @@ datasource db {
 model League {
     id String @id @default(cuid())
     name String @unique
-    teams Team[]
 }
 
 model Team {
-    id String @id @default(cuid())
+    id Int @id
     name String @unique
     logo String
-    league League @relation(fields: [leagueId], references: [id])
-    leagueId String
 }
 
