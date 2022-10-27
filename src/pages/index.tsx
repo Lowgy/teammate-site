@@ -1,13 +1,28 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import Image from 'next/image';
+import { useState } from 'react';
 import { trpc } from '../utils/trpc';
+import { Team } from '@prisma/client';
+
+import Select from 'react-select';
 
 const Home: NextPage = () => {
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+
   const { data: scraperData, isLoading } = trpc.useQuery(['teams.getAll'], {
     onSuccess(data) {
-      console.log(data);
+      setTeams(data);
     },
   });
+
+  const customStyles = {
+    control: (base: any, state: any) => ({
+      ...base,
+      textColor: 'black',
+    }),
+  };
 
   if (!scraperData || isLoading) return <p>Loading.....</p>;
 
@@ -20,7 +35,30 @@ const Home: NextPage = () => {
       </Head>
 
       <main className="mx-auto my-12 max-w-3xl">
-        <h1 className="text-2xl font-semibold">TeamMate</h1>
+        <div className="flex justify-between">
+          <h1 className="text-2xl font-semibold">TeamMate</h1>
+        </div>
+        <div className="mt-4">
+          <Select
+            value={selectedTeam}
+            formatOptionLabel={(team: Team) => (
+              <div className="flex items-center">
+                <span>{team.name}</span>
+                <Image
+                  src={team.logo}
+                  className="ml-2"
+                  height={35}
+                  width={35}
+                  alt={`${team.name} Logo`}
+                />
+              </div>
+            )}
+            getOptionLabel={(team: Team) => team.name}
+            getOptionValue={(team: Team) => team.name}
+            options={teams}
+            styles={customStyles}
+          />
+        </div>
       </main>
     </>
   );
