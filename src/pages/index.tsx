@@ -9,7 +9,10 @@ import Select from 'react-select';
 
 const Home: NextPage = () => {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [firstSelectedTeam, setFirstSelectedTeam] = useState<Team | null>(null);
+  const [secondSelectedTeam, setSecondSelectedTeam] = useState<Team | null>(
+    null
+  );
 
   const { data: scraperData, isLoading } = trpc.useQuery(['teams.getAll'], {
     onSuccess(data) {
@@ -21,7 +24,16 @@ const Home: NextPage = () => {
     control: (base: any, state: any) => ({
       ...base,
       textColor: 'black',
+      backgroundColor: state.isDisabled ? 'lightgray' : 'white',
     }),
+  };
+
+  const handleChange = (type: string, selectedOption: any) => {
+    if (type === 'first') {
+      setFirstSelectedTeam(selectedOption);
+    } else {
+      setSecondSelectedTeam(selectedOption);
+    }
   };
 
   if (!scraperData || isLoading) return <p>Loading.....</p>;
@@ -34,13 +46,14 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="mx-auto my-12 max-w-3xl">
+      <main className="mx-auto my-12 max-w-7xl">
         <div className="flex justify-between">
-          <h1 className="text-2xl font-semibold">TeamMate</h1>
+          <h1 className="text-2xl font-semibold text-white">TeamMate</h1>
         </div>
-        <div className="mt-4">
+        <div className="mt-4 flex space-x-4">
           <Select
-            value={selectedTeam}
+            className="w-1/2"
+            value={firstSelectedTeam}
             formatOptionLabel={(team: Team) => (
               <div className="flex items-center">
                 <span>{team.name}</span>
@@ -57,6 +70,31 @@ const Home: NextPage = () => {
             getOptionValue={(team: Team) => team.name}
             options={teams}
             styles={customStyles}
+            onChange={(selectedOption) => handleChange('first', selectedOption)}
+          />
+          <Select
+            className="w-1/2"
+            value={secondSelectedTeam}
+            formatOptionLabel={(team: Team) => (
+              <div className="flex items-center">
+                <span>{team.name}</span>
+                <Image
+                  src={team.logo}
+                  className="ml-2"
+                  height={35}
+                  width={35}
+                  alt={`${team.name} Logo`}
+                />
+              </div>
+            )}
+            getOptionLabel={(team: Team) => team.name}
+            getOptionValue={(team: Team) => team.name}
+            options={teams}
+            styles={customStyles}
+            isDisabled={!firstSelectedTeam}
+            onChange={(selectedOption) =>
+              handleChange('second', selectedOption)
+            }
           />
         </div>
       </main>
