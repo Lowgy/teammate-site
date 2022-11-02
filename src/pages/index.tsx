@@ -4,8 +4,11 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { trpc } from '../utils/trpc';
 import { Team } from '@prisma/client';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
 
 import Select from 'react-select';
+import { DateRange } from 'react-date-range';
 
 const Home: NextPage = () => {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -13,6 +16,13 @@ const Home: NextPage = () => {
   const [secondSelectedTeam, setSecondSelectedTeam] = useState<Team | null>(
     null
   );
+  const [dateRange, setDateRange] = useState([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: 'selection',
+    },
+  ]);
 
   const { data: scraperData, isLoading } = trpc.useQuery(['teams.getAll'], {
     onSuccess(data) {
@@ -34,6 +44,10 @@ const Home: NextPage = () => {
     } else {
       setSecondSelectedTeam(selectedOption);
     }
+  };
+
+  const handleDateChange = (item: any) => {
+    setDateRange([item.selection]);
   };
 
   if (!scraperData || isLoading) return <p>Loading.....</p>;
@@ -96,6 +110,21 @@ const Home: NextPage = () => {
               handleChange('second', selectedOption)
             }
           />
+          {secondSelectedTeam ? (
+            <DateRange
+              editableDateInputs={true}
+              onChange={handleDateChange}
+              ranges={dateRange}
+              moveRangeOnFirstSelection={false}
+            />
+          ) : (
+            <Select
+              placeholder="Select a date range"
+              className="w-1/3"
+              styles={customStyles}
+              isDisabled={!secondSelectedTeam}
+            />
+          )}
         </div>
       </main>
     </>
