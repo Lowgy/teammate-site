@@ -1,8 +1,6 @@
 import { prisma } from '../src/server/db/client';
 import puppeteer from 'puppeteer';
 
-console.log('hi0');
-
 (async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();

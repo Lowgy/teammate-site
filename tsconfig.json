@@ -24,5 +24,9 @@
     "**/*.mjs",
     "node_modules/@types/puppeteer/index.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
 }
