@@ -9,6 +9,7 @@ import puppeteer from 'puppeteer';
     timeout: 0,
   });
 
+  // Has problem with International games
   const trimEverythingBeforeAndAfterComma = (str: string) => {
     const commaIndex = str.indexOf(',');
     const secondCommaIndex = str.indexOf(',', commaIndex + 1);
@@ -16,6 +17,7 @@ import puppeteer from 'puppeteer';
   };
 
   // Grabs the week of games.
+  // TODO: Fix Structure, add to DB
   const grabWeekOfGames = async () => {
     const rows = await page.$$(
       '.ScheduleTables .Table__TR.Table__TR--sm.Table__even'
@@ -30,7 +32,7 @@ import puppeteer from 'puppeteer';
           'td:nth-of-type(1) div span a:nth-of-type(2)',
           (el) => el.innerHTML
         );
-        const date = await row.$eval(
+        const time = await row.$eval(
           'td:nth-of-type(3) a',
           (el) => el.innerHTML
         );
@@ -42,7 +44,7 @@ import puppeteer from 'puppeteer';
         return {
           homeTeam,
           awayTeam,
-          date,
+          time,
           location,
         };
       })
