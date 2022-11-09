@@ -15,7 +15,7 @@ import puppeteer from 'puppeteer';
 
   // Last day of Season is 20230409
   // Grab games
-  // TODO: Click through days and grab more games, Fix Structure, add to DB
+  // TODO: Fix Structure, add to DB
   const grabGames = async () => {
     const dayTable = await page.$$('.ResponsiveTable');
     const formattedGames = await Promise.all(
@@ -54,6 +54,64 @@ import puppeteer from 'puppeteer';
     );
     console.log(formattedGames);
   };
+
+  const getActiveDate = async () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr'];
+    let day = await page.$eval(
+      '.is-active .Day__Number span',
+      (el) => el.innerHTML
+    );
+    console.log(day);
+    if (months.some((month) => day.includes(month))) {
+      day += ' 2023';
+    } else {
+      day += ' 2022';
+    }
+    day = new Date(day).toLocaleDateString();
+    const formattedDate = parseInt(day.replaceAll('-', ''));
+    console.log(formattedDate, 'FORMATTED DATE');
+    return formattedDate;
+  };
+
+  const getCurrentDayIndex = async () => {
+    const week = await page.$('.Week.currentWeek .Week__wrapper');
+    const days: any = await week?.$$('.Day');
+    let activeDay = await Promise.all(
+      days?.map(async (day: any, index: number) => {
+        let test = await day.$eval(
+          '.Day__Number span',
+          (el: any) => el.innerHTML
+        );
+        if (test === 'Jan 1') {
+          test += ' 2023';
+        } else {
+          test += ' 2022';
+        }
+        test = new Date(test).toLocaleDateString();
+        const formattedDate = parseInt(test.replaceAll('-', ''));
+        if (formattedDate === date) {
+          return index;
+        }
+      })
+    );
+    activeDay = activeDay.filter((day: any) => day !== undefined);
+    return activeDay[0] + 1;
+  };
+
+  let date: any = await getActiveDate();
+  const dateIndex: any = await getCurrentDayIndex();
+
+  while (date < 20230409) {
+    await grabGames();
+    await page.click('.Arrow--right');
+    await page.screenshot({ path: 'example.png' });
+
+    await page.click(
+      `.Week.currentWeek .Week__wrapper .Day:nth-of-type(${dateIndex})`
+    );
+    await page.screenshot({ path: 'screenshot.png' });
+    date = await getActiveDate();
+  }
 
   await grabGames();
   await browser.close();
