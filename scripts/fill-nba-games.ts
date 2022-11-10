@@ -8,6 +8,7 @@ import puppeteer from 'puppeteer';
     waitUntil: 'load',
     timeout: 0,
   });
+
   const trimDay = (str: string) => {
     const commaIndex = str.indexOf(',');
     return str.substring(commaIndex + 2);

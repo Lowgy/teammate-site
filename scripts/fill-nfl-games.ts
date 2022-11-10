@@ -16,41 +16,51 @@ import puppeteer from 'puppeteer';
     return str.substring(commaIndex + 2, secondCommaIndex);
   };
 
+  const trimDay = (str: string) => {
+    const commaIndex = str.indexOf(',');
+    return str.substring(commaIndex + 2);
+  };
+
   // Grabs the week of games.
   // TODO: Fix Structure, add to DB
   const grabWeekOfGames = async () => {
-    const rows = await page.$$(
-      '.ScheduleTables .Table__TR.Table__TR--sm.Table__even'
-    );
+    const dayTable = await page.$$('.ScheduleTables .ResponsiveTable');
     const formattedGames = await Promise.all(
-      rows.map(async (row) => {
-        const homeTeam = await row.$eval(
-          'td:nth-of-type(2) .Table__Team a:nth-of-type(2)',
-          (el) => el.innerHTML
+      dayTable.map(async (day) => {
+        const date = await day.$eval('.Table__Title', (el) => el.innerHTML);
+        const rows = await day.$$('.Table__TR.Table__TR--sm.Table__even');
+        const games = await Promise.all(
+          rows.map(async (row) => {
+            const homeTeam = await row.$eval(
+              'td:nth-of-type(2) .Table__Team a:nth-of-type(2)',
+              (el) => el.innerHTML
+            );
+            const awayTeam = await row.$eval(
+              'td:nth-of-type(1) div span a:nth-of-type(2)',
+              (el) => el.innerHTML
+            );
+            const time = await row.$eval(
+              'td:nth-of-type(3) a',
+              (el) => el.innerHTML
+            );
+            let location = await row.$eval(
+              'td:nth-of-type(6)',
+              (el) => el.innerHTML
+            );
+            location = trimEverythingBeforeAndAfterComma(location);
+            return {
+              homeTeam,
+              awayTeam,
+              date: trimDay(date),
+              time,
+              location,
+            };
+          })
         );
-        const awayTeam = await row.$eval(
-          'td:nth-of-type(1) div span a:nth-of-type(2)',
-          (el) => el.innerHTML
-        );
-        const time = await row.$eval(
-          'td:nth-of-type(3) a',
-          (el) => el.innerHTML
-        );
-        let location = await row.$eval(
-          'td:nth-of-type(6)',
-          (el) => el.innerHTML
-        );
-        location = trimEverythingBeforeAndAfterComma(location);
-        return {
-          homeTeam,
-          awayTeam,
-          time,
-          location,
-        };
+        return games;
       })
     );
     console.log(formattedGames);
-    return formattedGames;
   };
 
   // Grabs the current NFL week #
