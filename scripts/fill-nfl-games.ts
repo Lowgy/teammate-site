@@ -21,6 +21,14 @@ import puppeteer from 'puppeteer';
     return str.substring(commaIndex + 2);
   };
 
+  const formatTeamNames = (str: string) => {
+    const lastSlashIndex = str.lastIndexOf('/');
+    return str
+      .substring(lastSlashIndex + 1)
+      .replace(/-/g, ' ')
+      .replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+  };
+
   // Grabs the week of games.
   // TODO: Fix Structure, add to DB
   const grabWeekOfGames = async () => {
@@ -31,13 +39,13 @@ import puppeteer from 'puppeteer';
         const rows = await day.$$('.Table__TR.Table__TR--sm.Table__even');
         const games = await Promise.all(
           rows.map(async (row) => {
-            const homeTeam = await row.$eval(
+            const homeTeam: any = await row.$eval(
               'td:nth-of-type(2) .Table__Team a:nth-of-type(2)',
-              (el) => el.innerHTML
+              (el) => el.getAttribute('href')
             );
-            const awayTeam = await row.$eval(
+            const awayTeam: any = await row.$eval(
               'td:nth-of-type(1) div span a:nth-of-type(2)',
-              (el) => el.innerHTML
+              (el) => el.getAttribute('href')
             );
             const time = await row.$eval(
               'td:nth-of-type(3) a',
@@ -48,12 +56,12 @@ import puppeteer from 'puppeteer';
               (el) => el.innerHTML
             );
             location = trimEverythingBeforeAndAfterComma(location);
-            prisma.game.create({
+            await prisma.game.create({
               data: {
-                homeTeam: homeTeam,
-                awayTeam: awayTeam,
+                homeTeam: formatTeamNames(homeTeam),
+                awayTeam: formatTeamNames(awayTeam),
                 time: time,
-                date: trimDay(date),
+                date: new Date(trimDay(date)),
                 location: location,
               },
             });
@@ -62,7 +70,7 @@ import puppeteer from 'puppeteer';
         return games;
       })
     );
-    console.log(formattedGames);
+    // console.log(formattedGames);
   };
 
   // Grabs the current NFL week #
