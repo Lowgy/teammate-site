@@ -48,13 +48,15 @@ import puppeteer from 'puppeteer';
               (el) => el.innerHTML
             );
             location = trimEverythingBeforeAndAfterComma(location);
-            return {
-              homeTeam,
-              awayTeam,
-              date: trimDay(date),
-              time,
-              location,
-            };
+            prisma.game.create({
+              data: {
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                time: time,
+                date: trimDay(date),
+                location: location,
+              },
+            });
           })
         );
         return games;

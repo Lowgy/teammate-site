@@ -23,3 +23,12 @@ model Team {
     logo String
 }
 
+model Game {
+    id String @id @default(cuid())
+    homeTeam String
+    awayTeam String
+    time String
+    date DateTime
+    location String
+}
+

@@ -41,13 +41,15 @@ import puppeteer from 'puppeteer';
               'td:nth-of-type(2) .Table__Team a:nth-of-type(2)',
               (el) => el.innerHTML
             );
-            return {
-              homeTeam,
-              awayTeam,
-              time,
-              date: trimDay(date),
-              location,
-            };
+            prisma.game.create({
+              data: {
+                homeTeam: homeTeam,
+                awayTeam: awayTeam,
+                time: time,
+                date: trimDay(date),
+                location: location,
+              },
+            });
           })
         );
         return games;
