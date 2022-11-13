@@ -14,9 +14,17 @@ import puppeteer from 'puppeteer';
     return str.substring(commaIndex + 2);
   };
 
+  const formatTeamNames = (str: string) => {
+    const lastSlashIndex = str.lastIndexOf('/');
+    return str
+      .substring(lastSlashIndex + 1)
+      .replace(/-/g, ' ')
+      .replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+  };
+
   // Last day of Season is 20230413
   // Grab games
-  // TODO: Fix Structure, add to DB
+  // TODO LATER: Find solution for anys.
   const grabGames = async () => {
     const dayTable = await page.$$('.ResponsiveTable');
     const formattedGames = await Promise.all(
@@ -25,13 +33,13 @@ import puppeteer from 'puppeteer';
         const rows = await day.$$('.Table__TR.Table__TR--sm.Table__even');
         const games = await Promise.all(
           rows.map(async (row) => {
-            const homeTeam = await row.$eval(
+            const homeTeam: any = await row.$eval(
               'td:nth-of-type(2) .Table__Team a:nth-of-type(2)',
-              (el) => el.innerHTML
+              (el) => el.getAttribute('href')
             );
-            const awayTeam = await row.$eval(
+            const awayTeam: any = await row.$eval(
               'td:nth-of-type(1) div span a:nth-of-type(2)',
-              (el) => el.innerHTML
+              (el) => el.getAttribute('href')
             );
             const time = await row.$eval(
               'td:nth-of-type(3) a',
@@ -41,12 +49,12 @@ import puppeteer from 'puppeteer';
               'td:nth-of-type(2) .Table__Team a:nth-of-type(2)',
               (el) => el.innerHTML
             );
-            prisma.game.create({
+            await prisma.game.create({
               data: {
-                homeTeam: homeTeam,
-                awayTeam: awayTeam,
+                homeTeam: formatTeamNames(homeTeam),
+                awayTeam: formatTeamNames(awayTeam),
                 time: time,
-                date: trimDay(date),
+                date: new Date(trimDay(date)),
                 location: location,
               },
             });
@@ -55,7 +63,7 @@ import puppeteer from 'puppeteer';
         return games;
       })
     );
-    console.log(formattedGames);
+    // console.log(formattedGames);
   };
 
   const getActiveDate = async () => {

@@ -30,7 +30,7 @@ import puppeteer from 'puppeteer';
   };
 
   // Grabs the week of games.
-  // TODO: Fix Structure, add to DB
+  // TODO LATER: Find solution for anys.
   const grabWeekOfGames = async () => {
     const dayTable = await page.$$('.ScheduleTables .ResponsiveTable');
     const formattedGames = await Promise.all(
