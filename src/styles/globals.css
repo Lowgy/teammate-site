@@ -5,3 +5,15 @@
 body {
   @apply bg-gray-800;
 }
+
+.submit-button {
+  @apply rounded bg-blue-500 py-2 px-4 font-bold text-white hover:bg-blue-700;
+}
+
+.button {
+  @apply rounded bg-white text-black hover:bg-gray-200;
+}
+
+.button-disabled {
+  @apply rounded bg-gray-300 text-gray-600;
+}

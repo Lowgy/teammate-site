@@ -1,5 +1,4 @@
 import { createRouter } from './context';
-import { z } from 'zod';
 
 export const teamRouter = createRouter().query('getAll', {
   async resolve({ ctx }) {

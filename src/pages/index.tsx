@@ -11,6 +11,13 @@ import Select from 'react-select';
 import { DateRange } from 'react-date-range';
 
 const Home: NextPage = () => {
+  const options = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  } as Intl.DateTimeFormatOptions;
+  const [open, setOpen] = useState(false);
+  const [click, setClicked] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [firstSelectedTeam, setFirstSelectedTeam] = useState<Team | null>(null);
   const [secondSelectedTeam, setSecondSelectedTeam] = useState<Team | null>(
@@ -23,12 +30,13 @@ const Home: NextPage = () => {
       key: 'selection',
     },
   ]);
-
-  const { data: scraperData, isLoading } = trpc.useQuery(['teams.getAll'], {
-    onSuccess(data) {
-      setTeams(data);
+  const intialDateState = [
+    {
+      startDate: new Date().toLocaleDateString('en-US', options),
+      endDate: new Date().toLocaleDateString('en-US', options),
+      key: 'selection',
     },
-  });
+  ];
 
   const customStyles = {
     control: (base: any, state: any) => ({
@@ -37,6 +45,12 @@ const Home: NextPage = () => {
       backgroundColor: state.isDisabled ? 'lightgray' : 'white',
     }),
   };
+
+  const { data: scraperData, isLoading } = trpc.useQuery(['teams.getAll'], {
+    onSuccess(data) {
+      setTeams(data);
+    },
+  });
 
   const handleChange = (type: string, selectedOption: any) => {
     if (type === 'first') {
@@ -49,6 +63,24 @@ const Home: NextPage = () => {
   const handleDateChange = (item: any) => {
     setDateRange([item.selection]);
   };
+
+  const { data: gamesData } = trpc.useQuery(
+    [
+      'games.getGames',
+      {
+        startDate: dateRange[0]?.startDate,
+        endDate: dateRange[0]?.endDate,
+        team1: firstSelectedTeam?.name,
+        team2: secondSelectedTeam?.name,
+      },
+    ],
+    {
+      enabled: click,
+      onSuccess(data) {
+        console.log(data);
+      },
+    }
+  );
 
   if (!scraperData || isLoading) return <p>Loading.....</p>;
 
@@ -85,6 +117,7 @@ const Home: NextPage = () => {
             options={teams}
             styles={customStyles}
             onChange={(selectedOption) => handleChange('first', selectedOption)}
+            isDisabled={open}
           />
           <Select
             className="w-1/2"
@@ -105,27 +138,59 @@ const Home: NextPage = () => {
             getOptionValue={(team: Team) => team.name}
             options={teams}
             styles={customStyles}
-            isDisabled={!firstSelectedTeam}
+            isDisabled={!firstSelectedTeam || open}
             onChange={(selectedOption) =>
               handleChange('second', selectedOption)
             }
           />
           {secondSelectedTeam ? (
-            <DateRange
-              editableDateInputs={true}
-              onChange={handleDateChange}
-              ranges={dateRange}
-              moveRangeOnFirstSelection={false}
-            />
+            <>
+              <button onClick={() => setOpen(!open)} className="button">
+                {open && dateRange
+                  ? `Close`
+                  : dateRange[0]?.startDate.toLocaleString('en-US', options) !==
+                    intialDateState[0]?.startDate
+                  ? `${dateRange[0]?.startDate.toLocaleString(
+                      'en-US',
+                      options
+                    )} - ${dateRange[0]?.endDate.toLocaleString(
+                      'en-US',
+                      options
+                    )}`
+                  : 'Select a date range'}
+              </button>
+              {open && (
+                <DateRange
+                  editableDateInputs={true}
+                  onChange={handleDateChange}
+                  ranges={dateRange}
+                  moveRangeOnFirstSelection={false}
+                />
+              )}
+            </>
           ) : (
-            <Select
-              placeholder="Select a date range"
-              className="w-1/3"
-              styles={customStyles}
-              isDisabled={!secondSelectedTeam}
-            />
+            <button
+              onClick={() => setOpen(!open)}
+              className="button-disabled w-1/3"
+              disabled={true}
+            >
+              Select a date range
+            </button>
           )}
         </div>
+        {firstSelectedTeam &&
+          secondSelectedTeam &&
+          dateRange[0]?.endDate.toLocaleString('en-US', options) !==
+            dateRange[0]?.startDate.toLocaleString('en-US', options) && (
+            <div className="flex justify-center">
+              <button
+                className="submit-button"
+                onClick={() => setClicked(!click)}
+              >
+                Search for games
+              </button>
+            </div>
+          )}
       </main>
     </>
   );
